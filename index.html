@@ -382,66 +382,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="app">
 
 <!-- ══════════════════════════════════════════
-     API KEY — necesaria para el OCR con IA
-══════════════════════════════════════════ -->
-<div class="apikey-box" id="apikeyBox">
-  <i class="ti ti-key apikey-ico ak-ico" id="apikeyIco"></i>
-  <span class="ak-txt" id="apikeyTxt">Para leer documentos con IA, ingresa tu <strong>API key de Anthropic</strong></span>
-  <button class="ak-link" id="apikeyToggle" onclick="toggleApikeyForm()">Configurar</button>
-  <div class="apikey-form" id="apikeyForm">
-    <input type="password" id="apikeyInput" placeholder="sk-ant-...">
-    <button class="btn btn-p" onclick="saveApikey()"><i class="ti ti-check"></i> Guardar</button>
-    <div style="width:100%;font-size:11px;color:var(--txt3)">
-      Se guarda solo en este navegador (localStorage), nunca se envía a nadie más que a Anthropic.
-      ¿No tienes una? Consíguela en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--info)">console.anthropic.com</a>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     ZONA OCR — foto o PDF
-══════════════════════════════════════════ -->
-<div class="ocr-zone" id="ocrZone">
-
-  <!-- estado inicial -->
-  <div class="ocr-drop" id="ocrDrop">
-    <input type="file" id="ocrFile" accept="image/*,application/pdf">
-    <div class="ocr-drop-ico"><i class="ti ti-scan"></i></div>
-    <h3>Subir documento</h3>
-    <p>Foto, imagen o PDF de boleta, factura o comprobante — extraemos los datos automáticamente</p>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px">
-      <button class="cam-btn" onclick="document.getElementById('ocrFile').setAttribute('capture','environment');document.getElementById('ocrFile').setAttribute('accept','image/*');document.getElementById('ocrFile').click()">
-        <i class="ti ti-camera"></i> Tomar foto
-      </button>
-      <button class="sec-btn" onclick="document.getElementById('ocrFile').removeAttribute('capture');document.getElementById('ocrFile').setAttribute('accept','image/*,application/pdf');document.getElementById('ocrFile').click()">
-        <i class="ti ti-photo"></i> Elegir desde galería o PDF
-      </button>
-    </div>
-  </div>
-
-  <!-- spinner mientras procesa -->
-  <div class="ocr-spin" id="ocrSpin">
-    <div class="spinner"></div>
-    <p id="ocrSpinMsg">Leyendo documento con IA…</p>
-  </div>
-
-  <!-- resultado OCR -->
-  <div class="ocr-preview" id="ocrPreview">
-    <div class="ocr-thumb" id="ocrThumb"></div>
-    <div class="ocr-result">
-      <h4>Datos extraídos del documento</h4>
-      <div class="ocr-tags" id="ocrTags"></div>
-      <div class="ocr-status">
-        <i class="ti ti-check" style="color:var(--green)"></i>
-        <span style="font-size:12px;color:var(--txt2)">Datos aplicados al formulario</span>
-        <button class="ocr-clear" onclick="clearOcr()"><i class="ti ti-x"></i> Quitar</button>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ══════════════════════════════════════════
      ASISTENTE DE PREGUNTAS (de lo general a lo particular)
 ══════════════════════════════════════════ -->
 <div class="wizard" id="wizard"></div>
@@ -495,7 +435,6 @@ let regs = load();
 let ocr  = {};     // datos extraídos por OCR
 let ans = {};      // respuestas del asistente: {tipo, doc, n1, n2, pago, medio, valoriz, recep}
 let editingId = null; // id del registro que se está editando (null = registro nuevo)
-let apikey = loadApikey();
 
 /* ═══════════════════════════════════════════════
    ÁRBOL DE OPCIONES (estructura completa)
@@ -750,7 +689,7 @@ function getSteps(){
 
   const top = TREE.find(n=>n.id===ans.tipo);
   steps.push({key:'doc', short:'Documento:', q:top.docQ,
-    help:'Elija el documento que tiene a mano. Si subió una foto o PDF arriba, marcamos el que detectamos.',
+    help:'Elija el documento que tiene a mano.',
     options:(DOCS[top.id]||[]).map(d=>({...d, sug: ocr.tipodoc===d.id,
       badges: ocr.tipodoc===d.id ? '<span class="nb-badge sug"><i class="ti ti-sparkles"></i> Detectado en su documento</span>' : ''}))});
   if(!ans.doc) return steps;
@@ -1264,169 +1203,6 @@ function findNode(nodes, id){
 }
 
 /* ═══════════════════════════════════════════════
-   OCR — Anthropic API
-═══════════════════════════════════════════════ */
-document.getElementById('ocrFile').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if(!file) return;
-
-  if(!apikey){
-    showToast('⚠️ Configura tu API key de Anthropic para usar el OCR', 4000);
-    toggleApikeyForm(true);
-    e.target.value = '';
-    return;
-  }
-
-  const isPDF = file.type === 'application/pdf';
-  const isImg = file.type.startsWith('image/');
-  if(!isPDF && !isImg){ showToast('⚠️ Solo se aceptan imágenes o PDF'); e.target.value=''; return; }
-
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    const b64  = ev.target.result.split(',')[1];
-    if(!(respDraft.files.doc||[]).length){
-      const fid = 'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-      fput(fid, file);
-      respDraft.files.doc = [{fid, name:file.name, size:file.size, type:file.type}];
-    }
-    const mime = file.type;
-
-    document.getElementById('ocrDrop').style.display = 'none';
-    document.getElementById('ocrPreview').classList.remove('show');
-    document.getElementById('ocrSpin').classList.add('show');
-    document.getElementById('ocrSpinMsg').textContent = isPDF
-      ? 'Leyendo PDF con IA…'
-      : 'Leyendo imagen con IA…';
-
-    // Miniatura en el resultado
-    const thumb = document.getElementById('ocrThumb');
-    if(isPDF){
-      thumb.innerHTML = `<div class="pdf-ico"><i class="ti ti-file-type-pdf"></i><span>PDF</span></div>`;
-    } else {
-      thumb.innerHTML = `<img src="${ev.target.result}" alt="doc">`;
-    }
-
-    // Construir content según tipo
-    const docContent = isPDF
-      ? { type:'document', source:{ type:'base64', media_type:'application/pdf', data:b64 } }
-      : { type:'image',    source:{ type:'base64', media_type:mime,               data:b64 } };
-
-    const SYSTEM = `Eres un asistente especializado en rendiciones electorales chilenas (SERVEL, Ley 19.884).
-Analiza el documento adjunto (boleta, factura, ticket, comprobante, recibo, contrato, liquidación, etc.) y extrae los datos relevantes.
-Responde SOLO con un objeto JSON con estas claves posibles:
-- monto: número total (sin puntos ni $, solo dígitos y punto decimal si aplica)
-- fecha: en formato YYYY-MM-DD
-- desc: descripción breve del bien o servicio (máx 80 caracteres)
-- prov: nombre del proveedor, empresa o emisor
-- ndoc: número de boleta, factura, folio o documento
-- rut: RUT del emisor si aparece (con guión, ej: 76.123.456-7)
-- tipodoc: el tipo de documento, usando SOLO uno de estos códigos: bol (boleta de venta o servicios), fac (factura afecta o exenta), bhe (boleta de honorarios), bter (boleta de prestación de servicios de terceros), ticket (ticket o comprobante: Uber, taxi, peaje, TAG, bencina), pasaje (pasaje o tarjeta de embarque), contrato (contrato de arriendo), liq (contrato de trabajo o de prestación de servicios), recibo (recibo simple), transf (comprobante de transferencia o depósito), credito (contrato o pagaré de crédito), comodato (contrato de comodato o préstamo de uso), cotiz (cotización)
-Si un campo no aparece en el documento, omítelo (no escribas null ni "").
-Solo incluye lo que puedas leer claramente.
-Responde ÚNICAMENTE el JSON plano, sin texto adicional, sin markdown, sin explicaciones.`;
-
-    try {
-      const headers = {
-        'Content-Type':'application/json',
-        'x-api-key': apikey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      };
-      if(isPDF) headers['anthropic-beta'] = 'pdfs-2024-09-25';
-
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          system: SYSTEM,
-          messages:[{
-            role:'user',
-            content:[
-              docContent,
-              {type:'text', text:'Extrae los datos de este documento para una rendición electoral.'}
-            ]
-          }]
-        })
-      });
-
-      const data = await resp.json();
-
-      // Diagnóstico visible si la API devuelve error
-      if(!resp.ok || data.error){
-        const msg = data.error?.message || `Error ${resp.status}`;
-        document.getElementById('ocrSpin').classList.remove('show');
-        document.getElementById('ocrDrop').style.display = 'flex';
-        showToast('⚠️ ' + msg, 5000);
-        return;
-      }
-
-      const txt  = (data.content||[]).map(c=>c.text||'').join('');
-      let parsed = {};
-      try {
-        const clean = txt.replace(/```json|```/g,'').trim();
-        // Extraer primer bloque JSON si hay texto alrededor
-        const match = clean.match(/\{[\s\S]*\}/);
-        parsed = match ? JSON.parse(match[0]) : {};
-      } catch(er){ parsed = {}; }
-
-      ocr = parsed;
-
-      document.getElementById('ocrSpin').classList.remove('show');
-      document.getElementById('ocrPreview').classList.add('show');
-
-      const tags = document.getElementById('ocrTags');
-      tags.innerHTML = '';
-      const docLbl = ocr.tipodoc ? docLabelById(ocr.tipodoc) : '';
-      if(docLbl)    tags.innerHTML += `<span class="ocr-tag"><strong>Documento:</strong> ${docLbl}</span>`;
-      if(ocr.monto) tags.innerHTML += `<span class="ocr-tag"><strong>Monto:</strong> ${fmt(ocr.monto)}</span>`;
-      if(ocr.fecha) tags.innerHTML += `<span class="ocr-tag"><strong>Fecha:</strong> ${ffecha(ocr.fecha)}</span>`;
-      if(ocr.prov)  tags.innerHTML += `<span class="ocr-tag"><strong>Emisor:</strong> ${ocr.prov}</span>`;
-      if(ocr.ndoc)  tags.innerHTML += `<span class="ocr-tag"><strong>N°doc:</strong> ${ocr.ndoc}</span>`;
-      if(ocr.rut)   tags.innerHTML += `<span class="ocr-tag"><strong>RUT:</strong> ${ocr.rut}</span>`;
-      if(ocr.desc)  tags.innerHTML += `<span class="ocr-tag"><strong>Desc:</strong> ${ocr.desc}</span>`;
-      if(!tags.innerHTML) tags.innerHTML = `<span class="ocr-tag">No se pudo extraer información del documento</span>`;
-
-      renderWizard();
-      if(leafNode() && wizardDone()) showForm(leafNode());
-
-    } catch(err){
-      document.getElementById('ocrSpin').classList.remove('show');
-      document.getElementById('ocrDrop').style.display = 'flex';
-      showToast('⚠️ ' + (err.message || 'No se pudo procesar el documento'), 5000);
-    }
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-});
-
-function clearOcr(){
-  ocr = {};
-  document.getElementById('ocrPreview').classList.remove('show');
-  document.getElementById('ocrDrop').style.display = 'flex';
-  document.getElementById('ocrTags').innerHTML = '';
-  renderWizard();
-  if(leafNode() && wizardDone()) showForm(leafNode());
-}
-
-// Drag & drop
-const zone = document.getElementById('ocrZone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
-zone.addEventListener('drop', e => {
-  e.preventDefault(); zone.classList.remove('dragging');
-  const f = e.dataTransfer.files[0];
-  if(f && (f.type.startsWith('image/') || f.type === 'application/pdf')){
-    const dt = new DataTransfer(); dt.items.add(f);
-    document.getElementById('ocrFile').files = dt.files;
-    document.getElementById('ocrFile').dispatchEvent(new Event('change'));
-  } else {
-    showToast('⚠️ Solo se aceptan imágenes o PDF');
-  }
-});
-
-/* ═══════════════════════════════════════════════
    LISTA / RESUMEN
 ═══════════════════════════════════════════════ */
 function toggleResumen(){
@@ -1561,51 +1337,6 @@ function today(){ return new Date().toISOString().split('T')[0]; }
 function save(){ try{ localStorage.setItem('servel25v2',JSON.stringify(regs)); }catch(e){} }
 function load(){ try{ const r=localStorage.getItem('servel25v2'); return r?JSON.parse(r):[]; }catch(e){ return []; } }
 
-/* ═══════════════════════════════════════════════
-   API KEY (Anthropic) — solo se guarda en este navegador
-═══════════════════════════════════════════════ */
-function loadApikey(){ try{ return localStorage.getItem('servel25v2_apikey') || ''; }catch(e){ return ''; } }
-
-function refreshApikeyUI(){
-  const box   = document.getElementById('apikeyBox');
-  const txt   = document.getElementById('apikeyTxt');
-  const ico   = document.getElementById('apikeyIco');
-  const toggle= document.getElementById('apikeyToggle');
-  if(!box) return;
-  const hasKey = !!apikey;
-  box.classList.toggle('ok', hasKey);
-  ico.className = 'ti ' + (hasKey ? 'ti-shield-check' : 'ti-key') + ' ak-ico';
-  txt.innerHTML = hasKey
-    ? '<strong>API key configurada</strong> · el OCR funcionará en este navegador'
-    : 'Para leer documentos con IA, ingresa tu <strong>API key de Anthropic</strong>';
-  toggle.textContent = hasKey ? 'Cambiar' : 'Configurar';
-}
-
-function toggleApikeyForm(focus){
-  const form = document.getElementById('apikeyForm');
-  const input = document.getElementById('apikeyInput');
-  const willShow = !form.classList.contains('show');
-  form.classList.toggle('show', willShow);
-  if(willShow){
-    input.value = '';
-    form.classList.toggle('pulse', !!focus);
-    setTimeout(()=>input.focus(), 50);
-  } else {
-    form.classList.remove('pulse');
-  }
-}
-
-function saveApikey(){
-  const input = document.getElementById('apikeyInput');
-  const v = input.value.trim();
-  if(!v){ showToast('⚠️ Pega tu API key primero'); return; }
-  apikey = v;
-  try{ localStorage.setItem('servel25v2_apikey', apikey); }catch(e){}
-  document.getElementById('apikeyForm').classList.remove('show','pulse');
-  refreshApikeyUI();
-  showToast('✓ API key guardada en este navegador');
-}
-
 function showToast(msg, dur=2500){
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), dur);
@@ -1645,7 +1376,6 @@ applySidebarState();
 ═══════════════════════════════════════════════ */
 renderWizard();
 actualizarTotales();
-refreshApikeyUI();
 </script>
 </body>
 </html>
