@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maqueta nuevo sistema de rendición</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fff;--bg2:#f5f5f4;--bg3:#fafaf9;
+  --txt:#1c1917;--txt2:#78716c;--txt3:#a8a29e;
+  --brd:rgba(0,0,0,0.10);--brd2:rgba(0,0,0,0.18);
+  --red:#c0392b;--red2:#a93226;--red-light:rgba(192,57,43,0.08);
+  --r:8px;--rl:12px;
+  --ok:#27500A;--ok-bg:#EAF3DE;
+  --bad:#791F1F;--bad-bg:#FCEBEB;
+  --warn:#633806;--warn-bg:#FAEEDA;--warn-brd:#FAC775;
+  --info:#0C447C;--info-bg:#E6F1FB;--info-brd:#B5D4F4;
+  --green:#3B6D11;
+  --indent:28px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1917;--bg2:#292524;--bg3:#211f1e;
+    --txt:#f5f5f4;--txt2:#a8a29e;--txt3:#78716c;
+    --brd:rgba(255,255,255,0.08);--brd2:rgba(255,255,255,0.16);
+    --red-light:rgba(192,57,43,0.15);
+    --ok:#C0DD97;--ok-bg:#173404;
+    --bad:#F7C1C1;--bad-bg:#501313;
+    --warn:#FAC775;--warn-bg:#412402;--warn-brd:#633806;
+    --info:#B5D4F4;--info-bg:#042C53;--info-brd:#185FA5;
+    --green:#97C459;
+  }
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--txt);min-height:100vh;line-height:1.6}
+.app{max-width:620px;margin:0 auto;padding:0 0 2rem}
+
+/* ── MARCO ADMINISTRADOR SERVEL ── */
+.admin-shell{min-height:100vh;display:flex;flex-direction:column}
+.admin-topbar{background:#fff;border-bottom:1px solid #e2e2e0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 18px;height:58px;flex-shrink:0}
+.at-left{display:flex;align-items:center;gap:12px;min-width:0}
+.at-logo{width:36px;height:36px;background:var(--red);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.at-logo span{color:#fff;font-size:8px;font-weight:700;line-height:1.15;text-align:center}
+.at-left h1{font-size:15px;font-weight:400;color:#3a4a55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.at-left h1 strong{font-weight:700}
+.at-right{display:flex;align-items:center;gap:8px;flex-shrink:0;color:#3a4a55;font-size:13px;cursor:pointer}
+.at-right i.ti-user-circle{font-size:22px;color:#8a959c}
+.at-right .ti-chevron-down{font-size:13px;color:#8a959c}
+
+.admin-subbar{background:#0d3b52;color:#fff;display:flex;align-items:center;gap:12px;padding:0 18px;height:46px;flex-shrink:0}
+.menu-toggle{display:flex;align-items:center;gap:9px;background:none;border:none;color:#fff;font-family:inherit;font-size:13px;cursor:pointer;padding:6px 4px}
+.menu-toggle .mt-ico{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:14px}
+
+.admin-body{flex:1;display:flex;position:relative;min-height:0}
+.sidebar{width:250px;background:#fff;border-right:1px solid #e2e2e0;flex-shrink:0;position:fixed;top:104px;bottom:0;left:0;overflow-y:auto;transition:transform .22s ease;z-index:40}
+.sidebar.closed{transform:translateX(-100%)}
+.sidebar-hdr{background:var(--red);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;font-size:13px;font-weight:600}
+.sidebar-hdr button{background:none;border:none;color:#fff;font-size:16px;cursor:pointer;line-height:1;padding:2px}
+.sidebar-nav{padding:6px 0 30px}
+.nav-sec{font-size:11px;font-weight:700;color:#3a4a55;letter-spacing:.04em;padding:14px 16px 6px}
+.nav-item{display:flex;align-items:center;gap:7px;padding:8px 16px 8px 18px;font-size:13px;color:#b3541e;text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.nav-item i{font-size:12px;color:#2f7ab5;flex-shrink:0}
+.nav-item:hover{background:#f5f5f4}
+.nav-item.active{background:var(--red-light);color:var(--red2);font-weight:600;border-right:3px solid var(--red)}
+.nav-item.active i{color:var(--red)}
+.sidebar-backdrop{display:none}
+
+.main-content{flex:1;min-width:0;margin-left:250px;padding:22px 22px 60px;transition:margin-left .22s ease}
+.main-content.full{margin-left:0}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:#5c6b74;margin-bottom:10px}
+.breadcrumb i.ti-home{font-size:13px}
+.breadcrumb a{color:#2f7ab5;text-decoration:none}
+.page-title{font-size:22px;font-weight:600;color:#134559;margin-bottom:18px}
+.page-card{background:#fafaf9;border:1px solid #e2e2e0;border-radius:6px;padding:1.25rem}
+
+@media(max-width:880px){
+  .sidebar{top:104px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .main-content{margin-left:0!important}
+  .sidebar:not(.closed) ~ .sidebar-backdrop,.sidebar-backdrop.show{display:block;position:fixed;inset:104px 0 0 0;background:rgba(0,0,0,.35);z-index:30}
+  .at-left h1{font-size:13px}
+}
+@media(max-width:520px){
+  .at-left h1{display:none}
+  .admin-topbar{height:52px}
+}
+
+/* ── API KEY ── */
+.apikey-box{background:var(--bg);border:0.5px solid var(--brd2);border-radius:var(--rl);padding:11px 13px;margin-bottom:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.apikey-box.ok{background:var(--ok-bg);border-color:var(--ok)}
+.apikey-box .ak-ico{font-size:16px;color:var(--txt3);flex-shrink:0}
+.apikey-box.ok .ak-ico{color:var(--ok)}
+.apikey-box .ak-txt{flex:1;min-width:180px;font-size:12px;color:var(--txt2)}
+.apikey-box.ok .ak-txt{color:var(--ok)}
+.apikey-box .ak-txt strong{color:var(--txt);font-weight:500}
+.apikey-box.ok .ak-txt strong{color:var(--ok)}
+.apikey-form{display:none;gap:8px;width:100%;margin-top:8px;flex-wrap:wrap}
+.apikey-form.show{display:flex}
+.apikey-form input{flex:1;min-width:200px;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid var(--brd2);border-radius:var(--r);background:var(--bg);color:var(--txt);outline:none}
+.apikey-form input:focus{border-color:var(--red)}
+.apikey-form.pulse input{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.12)}
+.ak-link{background:none;border:none;color:var(--info);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;padding:0}
+
+/* ── ZONA OCR ── */
+.ocr-zone{background:var(--bg);border:1.5px dashed var(--brd2);border-radius:var(--rl);overflow:hidden;margin-bottom:1.5rem;transition:border-color .2s}
+.ocr-zone.dragging{border-color:var(--red);background:var(--red-light)}
+.ocr-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:2rem 1.5rem;cursor:pointer;text-align:center}
+.ocr-drop input{display:none}
+.ocr-drop-ico{width:52px;height:52px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--txt3)}
+.ocr-drop h3{font-size:15px;font-weight:500}
+.ocr-drop p{font-size:13px;color:var(--txt2);max-width:280px}
+.ocr-drop .cam-btn{display:inline-flex;align-items:center;gap:6px;background:var(--red);color:#fff;border:none;border-radius:var(--r);padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:4px}
+.ocr-drop .cam-btn:hover{background:var(--red2)}
+.ocr-drop .sec-btn{display:inline-flex;align-items:center;gap:6px;background:none;color:var(--txt2);border:0.5px solid var(--brd2);border-radius:var(--r);padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit}
+.ocr-drop .sec-btn:hover{background:var(--bg2)}
+.ocr-preview{display:none;padding:12px;gap:12px;align-items:flex-start}
+.ocr-preview.show{display:flex}
+.ocr-thumb{width:80px;height:80px;flex-shrink:0;border-radius:8px;border:0.5px solid var(--brd);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg2)}
+.ocr-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ocr-thumb .pdf-ico{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--red)}
+.ocr-thumb .pdf-ico i{font-size:28px}
+.ocr-thumb .pdf-ico span{font-size:10px;font-weight:600;color:var(--red)}
+.ocr-result{flex:1;min-width:0}
+.ocr-result h4{font-size:13px;font-weight:500;margin-bottom:6px}
+.ocr-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.ocr-tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg2);border:0.5px solid var(--brd);border-radius:20px;padding:3px 9px;font-size:11px;color:var(--txt2)}
+.ocr-tag strong{color:var(--txt);font-weight:500}
+.ocr-status{display:flex;align-items:center;gap:6px;font-size:12px}
+.ocr-spin{display:none;flex-direction:column;align-items:center;gap:12px;padding:1.75rem;text-align:center}
+.ocr-spin.show{display:flex}
+.spinner{width:28px;height:28px;border:2.5px solid var(--brd2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ocr-spin p{font-size:13px;color:var(--txt2)}
+.ocr-clear{background:none;border:none;color:var(--txt3);font-size:13px;cursor:pointer;padding:2px 4px;font-family:inherit;display:inline-flex;align-items:center;gap:4px}
+.ocr-clear:hover{color:var(--red)}
+
+/* ── TREE / ABANICO ── */
+.tree-section{margin-bottom:1.5rem}
+.tree-title{font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem}
+
+.node{position:relative}
+/* linea vertical izquierda de los hijos */
+.node-children{padding-left:var(--indent);position:relative}
+.node-children::before{content:'';position:absolute;left:13px;top:0;bottom:12px;width:1.5px;background:var(--brd2);border-radius:2px}
+
+/* botón del nodo */
+.node-btn{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border:0.5px solid var(--brd2);border-radius:var(--rl);cursor:pointer;background:var(--bg);text-align:left;width:100%;font-family:inherit;transition:border-color .15s,background .15s,box-shadow .15s;margin-bottom:7px;position:relative}
+.node-btn:hover{border-color:var(--red);background:var(--bg2)}
+.node-btn.open{border-color:var(--red);background:var(--red-light)}
+.node-btn.leaf{cursor:default}
+.node-btn.leaf:hover{border-color:var(--brd2);background:var(--bg)}
+.node-btn.selected{border:2px solid var(--red);background:var(--red-light)}
+.node-btn.selected .nb-arrow{color:var(--red)}
+
+.nb-ico{font-size:20px;color:var(--txt3);flex-shrink:0;width:24px;text-align:center;margin-top:1px;transition:color .15s}
+.node-btn.open .nb-ico,.node-btn.selected .nb-ico{color:var(--red)}
+.nb-txt{flex:1;min-width:0}
+.nb-titulo{display:block;font-size:14px;font-weight:500;color:var(--txt);line-height:1.3}
+.nb-desc{display:block;font-size:12px;color:var(--txt2);margin-top:2px;line-height:1.4}
+.nb-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;margin-top:4px}
+.nb-badge.gas{background:var(--bad-bg);color:var(--bad)}
+.nb-badge.ing{background:var(--ok-bg);color:var(--ok)}
+.nb-badge.don{background:var(--warn-bg);color:var(--warn)}
+.nb-arrow{margin-left:auto;flex-shrink:0;font-size:16px;color:var(--txt3);transition:transform .2s,color .2s;align-self:center}
+.node-btn.open .nb-arrow{transform:rotate(90deg);color:var(--red)}
+.nb-code{font-family:monospace;font-size:10px;background:var(--bg2);padding:1px 5px;border-radius:3px;color:var(--txt3);margin-left:6px}
+
+/* conectores horizontales a hijos */
+.node-connector{display:flex;align-items:center;gap:0;margin-left:0;position:relative}
+.node-connector::before{content:'';display:inline-block;width:15px;height:1.5px;background:var(--brd2);margin-right:0;flex-shrink:0}
+
+/* ── ASISTENTE DE PREGUNTAS ── */
+.wizard{margin-bottom:1.5rem}
+.wz-top{display:flex;align-items:baseline;gap:12px;margin-bottom:.5rem;flex-wrap:wrap}
+.wz-title{font-size:15px;font-weight:600;color:var(--txt)}
+.wz-count{font-size:12px;color:var(--txt2)}
+.wz-restart{margin-left:auto;background:none;border:none;color:var(--txt2);font-size:12px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;padding:2px 4px}
+.wz-restart:hover{color:var(--red)}
+.wz-prog{height:4px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:1rem}
+.wz-prog span{display:block;height:100%;background:var(--red);border-radius:4px;transition:width .35s ease}
+.wz-done{display:grid;grid-template-columns:22px 1fr auto;column-gap:10px;align-items:center;width:100%;text-align:left;background:var(--bg);border:0.5px solid var(--brd2);border-radius:var(--r);padding:8px 12px;margin-bottom:6px;cursor:pointer;font-family:inherit;transition:border-color .15s}
+.wz-done:hover{border-color:var(--red)}
+.wz-n{grid-row:1 / span 2;width:22px;height:22px;border-radius:50%;background:var(--ok-bg);color:var(--ok);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.wz-dq{grid-column:2;font-size:11px;color:var(--txt2);line-height:1.3}
+.wz-da{grid-column:2;font-size:13px;font-weight:500;color:var(--txt);display:flex;gap:6px;align-items:center;line-height:1.4}
+.wz-da i{color:var(--txt3);font-size:15px}
+.wz-edit{grid-column:3;grid-row:1 / span 2;font-size:12px;color:var(--info)}
+.wz-card{border:1.5px solid var(--red);background:var(--bg);border-radius:var(--rl);padding:1.1rem 1.1rem 1rem;margin-top:10px;animation:fadeIn .25s ease;scroll-margin-top:80px}
+.wz-step{font-size:12px;color:var(--red);font-weight:600;margin-bottom:2px}
+.wz-q{font-size:19px;font-weight:600;line-height:1.3;color:var(--txt)}
+.wz-help{font-size:13px;color:var(--txt2);margin:4px 0 14px;max-width:62ch}
+.wz-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.wz-opt{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border:0.5px solid var(--brd2);border-radius:var(--rl);cursor:pointer;background:var(--bg);text-align:left;width:100%;font-family:inherit;transition:border-color .15s,background .15s}
+.wz-opt:hover{border-color:var(--red);background:var(--bg2)}
+.wz-opt:hover .nb-ico{color:var(--red)}
+.wz-select{width:100%;max-width:560px;font-family:inherit;font-size:15px;padding:11px 12px;border:1px solid var(--brd2);border-radius:var(--r);background:var(--bg);color:var(--txt);cursor:pointer;outline:none}
+.wz-select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.12)}
+.wz-opt.sug{border-color:var(--info-brd);background:var(--info-bg)}
+.wz-opt:focus-visible,.wz-done:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.nb-badge.sug{background:var(--info-bg);color:var(--info)}
+.wz-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px;flex-wrap:wrap}
+.wz-back{background:none;border:none;color:var(--txt2);font-size:13px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;padding:4px 0}
+.wz-back:hover{color:var(--red)}
+.wz-ok{display:flex;gap:8px;align-items:center;padding:9px 12px;background:var(--ok-bg);color:var(--ok);border-radius:var(--r);font-size:13px;margin:10px 0 1rem}
+.fp-chips{display:flex;flex-wrap:wrap;gap:5px;margin:-4px 0 12px}
+@media(prefers-reduced-motion:reduce){.wz-card,.form-panel{animation:none}.wz-prog span{transition:none}}
+
+/* ── FORMULARIO ── */
+.form-panel{background:var(--bg);border:0.5px solid var(--brd2);border-radius:var(--rl);padding:1.1rem 1.1rem 1rem;margin-bottom:1rem;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.form-panel h3{font-size:14px;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:8px;color:var(--txt)}
+.form-panel h3 .fp-badge{font-size:11px;padding:2px 7px;border-radius:4px}
+.campo{display:flex;flex-direction:column;gap:5px;margin-bottom:.9rem}
+.campo label{font-size:12px;color:var(--txt2);font-weight:500}
+.campo input,.campo select,.campo textarea{font-family:inherit;font-size:14px;padding:9px 11px;border:0.5px solid var(--brd2);border-radius:var(--r);background:var(--bg);color:var(--txt);width:100%;outline:none;transition:border-color .14s,box-shadow .14s}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.10)}
+.campo input.ocr-filled{background:var(--info-bg);border-color:var(--info-brd)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pago-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.op-pago{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;border:0.5px solid var(--brd2);border-radius:var(--r);cursor:pointer;background:var(--bg);text-align:center;gap:4px;font-family:inherit;transition:border-color .14s;font-size:13px}
+.op-pago:hover{border-color:var(--red);background:var(--bg2)}
+.op-pago.sel{border:2px solid var(--red);background:var(--red-light)}
+.op-pago .t{font-weight:500;color:var(--txt)}
+.op-pago .s{font-size:11px;color:var(--txt2)}
+.aviso{display:flex;gap:9px;align-items:flex-start;padding:9px 12px;border-radius:var(--r);font-size:12px;margin-bottom:.8rem;line-height:1.5}
+.aviso i{flex-shrink:0;margin-top:1px}
+.av-warn{background:var(--warn-bg);color:var(--warn);border:0.5px solid var(--warn-brd)}
+.av-info{background:var(--info-bg);color:var(--info);border:0.5px solid var(--info-brd)}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:.5rem}
+
+/* ── BOTONES ── */
+.btn{padding:9px 18px;border-radius:var(--r);font-size:13px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;font-weight:500;transition:background .14s,transform .1s;border:none}
+.btn:active{transform:scale(.98)}
+.btn-p{background:var(--red);color:#fff}.btn-p:hover{background:var(--red2)}
+.btn-s{background:none;border:0.5px solid var(--brd2);color:var(--txt2)}.btn-s:hover{background:var(--bg2);color:var(--txt)}
+.btn-ghost{background:none;border:none;color:var(--txt2);padding:4px 8px;font-size:13px}.btn-ghost:hover{color:var(--red)}
+
+/* ── LISTA / RESUMEN ── */
+.resumen-toggle{display:flex;align-items:center;gap:10px;padding:11px 14px;border:0.5px solid var(--brd2);border-radius:var(--rl);background:var(--bg);cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;width:100%;text-align:left;margin-bottom:1rem;transition:background .14s}
+.resumen-toggle:hover{background:var(--bg2)}
+.resumen-toggle .rt-count{margin-left:auto;background:var(--red);color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:600}
+.totales{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:.9rem}
+.tot{background:var(--bg2);border-radius:var(--r);padding:11px 13px}
+.tot-lbl{font-size:11px;color:var(--txt2);margin-bottom:2px}
+.tot-val{font-size:18px;font-weight:500}
+.saldo-row{background:var(--bg);border:0.5px solid var(--brd2);border-radius:var(--rl);padding:11px 15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem}
+.saldo-lbl{font-size:13px;color:var(--txt2)}
+.saldo-val{font-size:18px;font-weight:500}
+.s-pos{color:var(--green)}.s-neg{color:var(--red)}
+.sec-lbl{font-size:11px;font-weight:500;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 4px}
+.lista{background:var(--bg);border:0.5px solid var(--brd);border-radius:var(--rl);overflow:hidden;margin-bottom:4px}
+.li{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 13px;border-bottom:0.5px solid var(--brd);gap:8px}
+.li:last-child{border-bottom:none}
+.li-nom{font-size:13px;font-weight:500}
+.li-meta{font-size:11px;color:var(--txt2);margin-top:1px;line-height:1.4}
+.li-monto{font-size:13px;font-weight:500;flex-shrink:0}
+.li-r{display:flex;align-items:center;gap:6px}
+.delbtn{background:none;border:none;cursor:pointer;color:var(--txt3);font-size:14px;padding:3px;display:flex}
+.delbtn:hover{color:var(--red)}
+.editbtn{background:none;border:none;cursor:pointer;color:var(--txt3);font-size:14px;padding:3px;display:flex}
+.editbtn:hover{color:var(--info)}
+.edit-banner{display:flex;align-items:center;gap:8px;background:var(--info-bg);color:var(--info);border:0.5px solid var(--info-brd);border-radius:var(--r);padding:8px 12px;font-size:12px;margin-bottom:.9rem}
+.edit-banner button{margin-left:auto;background:none;border:none;color:var(--info);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit}
+.empty{text-align:center;padding:1.75rem;color:var(--txt2);font-size:13px}
+.export-row{display:flex;justify-content:flex-end;margin-top:.5rem}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1c1917;color:#f5f5f4;padding:10px 18px;border-radius:var(--rl);font-size:13px;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:999;max-width:90vw;text-align:center;display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── FOOTER ── */
+.footer{margin-top:2rem;padding-top:1rem;border-top:0.5px solid var(--brd);font-size:11px;color:var(--txt3);text-align:center;line-height:1.9}
+
+@media(max-width:460px){
+  .wz-opts{grid-template-columns:1fr}
+  .wz-q{font-size:17px}
+  :root{--indent:20px}
+  .dos,.pago-opts{grid-template-columns:1fr}
+  .totales{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <!-- TOPBAR -->
+  <header class="admin-topbar">
+    <div class="at-left">
+      <div class="at-logo"><span>SER<br>VEL</span></div>
+      <h1>Control de <strong>Gasto y Financiamiento Electoral</strong></h1>
+    </div>
+    <div class="at-right">
+      <i class="ti ti-user-circle"></i>
+      <span>Hola, Jorge (17.021.603-2)</span>
+      <i class="ti ti-chevron-down"></i>
+    </div>
+  </header>
+
+  <!-- SUBBAR -->
+  <div class="admin-subbar">
+    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+      <span class="mt-ico"><i class="ti ti-menu-2"></i></span>
+      <span id="menuToggleLabel">Cerrar Menú</span>
+    </button>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-hdr">
+        Opciones del Sistema
+        <button onclick="toggleSidebar()" aria-label="Cerrar"><i class="ti ti-x"></i></button>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-sec">ESCENARIO ELECTORAL</div>
+        <a class="nav-item"><i class="ti ti-chevron-right"></i> Ver Eventos Eleccionarios</a>
+        <a class="nav-item"><i class="ti ti-chevron-right"></i> Nuevo Evento Eleccionario</a>
+        <a class="nav-item"><i class="ti ti-chevron-right"></i> Dashboard Evento Eleccionario</a>
+
+        <div class="nav-sec">RENDICIÓN ELECTORAL</div>
+        <a class="nav-item active"><i class="ti ti-chevron-right"></i> Rendición de Gastos e Ingresos</a>
+        <a class="nav-item"><i class="ti ti-chevron-right"></i> Mis Rendiciones</a>
+
+        <div class="nav-sec">MANTENEDORES</div>
+        <a class="nav-item"><i class="ti ti-chevron-right"></i> Administrador Electoral</a>
+        <a class="nav-item"><i class="ti ti-chevron-right"></i> Candidatos</a>
+        <a class="nav-item"><i class="ti ti-chevron-right"></i> Partidos Políticos</a>
+        <a class="nav-item"><i class="ti ti-chevron-right"></i> Vigencia de Partidos</a>
+      </nav>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+    <!-- MAIN -->
+    <main class="main-content" id="mainContent">
+      <div class="breadcrumb">
+        <i class="ti ti-home"></i>
+        <span>›</span>
+        <span>Rendición</span>
+        <span>›</span>
+        <span>Rendición de Gastos e Ingresos</span>
+      </div>
+      <h2 class="page-title">Rendición de Gastos e Ingresos</h2>
+
+      <div class="page-card">
+<div class="app">
+
+<!-- ══════════════════════════════════════════
+     API KEY — necesaria para el OCR con IA
+══════════════════════════════════════════ -->
+<div class="apikey-box" id="apikeyBox">
+  <i class="ti ti-key apikey-ico ak-ico" id="apikeyIco"></i>
+  <span class="ak-txt" id="apikeyTxt">Para leer documentos con IA, ingresa tu <strong>API key de Anthropic</strong></span>
+  <button class="ak-link" id="apikeyToggle" onclick="toggleApikeyForm()">Configurar</button>
+  <div class="apikey-form" id="apikeyForm">
+    <input type="password" id="apikeyInput" placeholder="sk-ant-...">
+    <button class="btn btn-p" onclick="saveApikey()"><i class="ti ti-check"></i> Guardar</button>
+    <div style="width:100%;font-size:11px;color:var(--txt3)">
+      Se guarda solo en este navegador (localStorage), nunca se envía a nadie más que a Anthropic.
+      ¿No tienes una? Consíguela en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--info)">console.anthropic.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ZONA OCR — foto o PDF
+══════════════════════════════════════════ -->
+<div class="ocr-zone" id="ocrZone">
+
+  <!-- estado inicial -->
+  <div class="ocr-drop" id="ocrDrop">
+    <input type="file" id="ocrFile" accept="image/*,application/pdf">
+    <div class="ocr-drop-ico"><i class="ti ti-scan"></i></div>
+    <h3>Subir documento</h3>
+    <p>Foto, imagen o PDF de boleta, factura o comprobante — extraemos los datos automáticamente</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px">
+      <button class="cam-btn" onclick="document.getElementById('ocrFile').setAttribute('capture','environment');document.getElementById('ocrFile').setAttribute('accept','image/*');document.getElementById('ocrFile').click()">
+        <i class="ti ti-camera"></i> Tomar foto
+      </button>
+      <button class="sec-btn" onclick="document.getElementById('ocrFile').removeAttribute('capture');document.getElementById('ocrFile').setAttribute('accept','image/*,application/pdf');document.getElementById('ocrFile').click()">
+        <i class="ti ti-photo"></i> Elegir desde galería o PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- spinner mientras procesa -->
+  <div class="ocr-spin" id="ocrSpin">
+    <div class="spinner"></div>
+    <p id="ocrSpinMsg">Leyendo documento con IA…</p>
+  </div>
+
+  <!-- resultado OCR -->
+  <div class="ocr-preview" id="ocrPreview">
+    <div class="ocr-thumb" id="ocrThumb"></div>
+    <div class="ocr-result">
+      <h4>Datos extraídos del documento</h4>
+      <div class="ocr-tags" id="ocrTags"></div>
+      <div class="ocr-status">
+        <i class="ti ti-check" style="color:var(--green)"></i>
+        <span style="font-size:12px;color:var(--txt2)">Datos aplicados al formulario</span>
+        <button class="ocr-clear" onclick="clearOcr()"><i class="ti ti-x"></i> Quitar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     ASISTENTE DE PREGUNTAS (de lo general a lo particular)
+══════════════════════════════════════════ -->
+<div class="wizard" id="wizard"></div>
+
+<!-- ══════════════════════════════════════════
+     FORMULARIO DE DATOS (aparece al elegir)
+══════════════════════════════════════════ -->
+<div id="form-area"></div>
+
+<!-- ══════════════════════════════════════════
+     RESUMEN / LISTA
+══════════════════════════════════════════ -->
+<button class="resumen-toggle" onclick="toggleResumen()">
+  <i class="ti ti-list-check"></i>
+  Resumen de rendición
+  <span class="rt-count" id="rt-count">0</span>
+</button>
+<div id="resumen-area" style="display:none">
+  <div class="totales">
+    <div class="tot"><div class="tot-lbl">Total ingresos</div><div class="tot-val" id="l-ti">$0</div></div>
+    <div class="tot"><div class="tot-lbl">Total gastos</div><div class="tot-val" id="l-tg">$0</div></div>
+  </div>
+  <div class="saldo-row">
+    <span class="saldo-lbl">Saldo</span>
+    <span class="saldo-val s-pos" id="l-saldo">$0</span>
+  </div>
+  <div id="lista-cuerpo"></div>
+  <div class="export-row">
+    <button class="btn btn-s" onclick="exportar()"><i class="ti ti-file-spreadsheet"></i> Exportar CSV</button>
+  </div>
+</div>
+
+<div class="footer">
+  SERVEL · Ley 19.884 sobre Transparencia, Límite y Control del Gasto Electoral<br>
+  Art. 2 letras a)–i) · Art. 9 y 46 Donaciones en especie
+</div>
+
+</div><!-- /app -->
+      </div><!-- /page-card -->
+    </main>
+  </div><!-- /admin-body -->
+</div><!-- /admin-shell -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   DATOS
+═══════════════════════════════════════════════ */
+let regs = load();
+let ocr  = {};     // datos extraídos por OCR
+let ans = {};      // respuestas del asistente: {tipo, doc, n1, n2, pago, medio, valoriz, recep}
+let editingId = null; // id del registro que se está editando (null = registro nuevo)
+let apikey = loadApikey();
+
+/* ═══════════════════════════════════════════════
+   ÁRBOL DE OPCIONES (estructura completa)
+═══════════════════════════════════════════════ */
+const TREE = [
+  {
+    id:'gasto', icon:'ti-receipt', label:'Rendir un gasto', q:'¿Para qué fue este gasto?', qhelp:'Piense en el objetivo del gasto dentro de la campaña.', docQ:'¿Qué documento respalda este gasto?',
+    desc:'Pagué algo para la campaña y quiero registrarlo',
+    kind:'gas',
+    children:[
+      {
+        id:'g-difundir', icon:'ti-speakerphone', label:'Para dar a conocer mi candidatura', q:'¿Por qué medio dio a conocer su candidatura?', qhelp:'Elija el canal donde apareció la propaganda.',
+        desc:'Publicidad, afiches, avisos, redes sociales, radio, prensa',
+        children:[
+          {id:'g-redes',    icon:'ti-brand-instagram', label:'Redes sociales', desc:'Facebook Ads, Instagram, TikTok, YouTube, X',              leaf:{letra:'a',cod:'213',desc:'Propaganda en redes sociales',prov:true}},
+          {id:'g-prensa',   icon:'ti-newspaper',       label:'Diario, revista o portal web', desc:'Prensa escrita o digital',                   leaf:{letra:'a',cod:'211',desc:'Propaganda en prensa escrita o digital',prov:true}},
+          {id:'g-radio',    icon:'ti-radio',           label:'Radio', desc:'Cuña, aviso o mención radial',                                       leaf:{letra:'a',cod:'212',desc:'Propaganda en radio',prov:true}},
+          {id:'g-impreso-i',icon:'ti-layout-board',    label:'Material impreso para instalar', desc:'Afiches, lienzos, palomas, carteles',       leaf:{letra:'a',cod:'214',desc:'Propaganda impresa para instalar (afiches, lienzos)',prov:true}},
+          {id:'g-impreso-r',icon:'ti-gift',            label:'Material para repartir', desc:'Volantes, gorros, poleras, bolsas, banderas',      leaf:{letra:'a',cod:'214',desc:'Merchandising y material de campaña',prov:true}},
+        ]
+      },
+      {
+        id:'g-encuesta', icon:'ti-chart-bar', label:'Para hacer una encuesta o sondeo',
+        desc:'Encuesta de opinión, intención de voto, estudio ciudadano',
+        leaf:{letra:'b',cod:'221',desc:'Encuesta electoral o social',prov:false}
+      },
+      {
+        id:'g-arriendo', icon:'ti-building', label:'Para arrendar algo', q:'¿Qué arrendó?', qhelp:'Si arrendó un espacio para poner publicidad, elija esa opción: se clasifica distinto.',
+        desc:'Arriendo de local, sede, vehículo, equipos u otros bienes',
+        children:[
+          {id:'g-arr-local',   icon:'ti-home',          label:'Local, sede u oficina', desc:'Espacio físico para la campaña o un evento',    leaf:{letra:'c',cod:'231',desc:'Arriendo de inmueble (sede u oficina)',prov:true}},
+          {id:'g-arr-veh-per', icon:'ti-users',         label:'Vehículo para trasladar al equipo', desc:'Brigadistas, activistas, candidato/a', leaf:{letra:'c',cod:'232',desc:'Arriendo vehículo — traslado de personas de la campaña',prov:true}},
+          {id:'g-arr-veh-mat', icon:'ti-package',       label:'Vehículo para transportar material', desc:'Afiches, cajas, equipos de campaña', leaf:{letra:'c',cod:'234',desc:'Arriendo vehículo — transporte de material electoral',prov:true}},
+          {id:'g-arr-equipos', icon:'ti-device-laptop', label:'Equipos, mobiliario u otros bienes', desc:'Computadores, mesas, sillas, sonido, megáfonos', leaf:{letra:'c',cod:'233',desc:'Arriendo de equipos u otros bienes muebles',prov:true}},
+          {id:'g-arr-pub',     icon:'ti-speakerphone',  label:'Espacio publicitario para difundir propaganda', desc:'Pantalla, sitio digital, espacio patrocinado', leaf:{letra:'a',cod:'211',desc:'Espacio publicitario para difundir propaganda',prov:false}},
+          {id:'g-arr-fis',     icon:'ti-map-pin',       label:'Espacio físico arrendado (no publicidad)', desc:'Arrendé un lugar para instalarlo o usarlo', leaf:{letra:'c',cod:'231',desc:'Arriendo espacio físico para campaña',prov:true}},
+        ]
+      },
+      {
+        id:'g-personas', icon:'ti-users', label:'Para pagar servicios prestados a la campaña', q:'¿Qué servicio se prestó a la campaña?', qhelp:'Elija el servicio principal que se pagó.',
+        desc:'Alojamiento, alimentación, brigadistas, agencia, administrador, redes, prensa',
+        children:[
+          {id:'g-alojamiento', icon:'ti-bed',             label:'Alojamiento del personal de apoyo', desc:'Hotel, hostal u hospedaje del equipo de campaña', leaf:{letra:'d',cod:'240',desc:'Servicios relacionados a gastos por alojamientos del personal de apoyo de la campaña',prov:true}},
+          {id:'g-comida',      icon:'ti-tools-kitchen-2', label:'Alimentación del personal de apoyo', desc:'Almuerzos, colaciones, agua y café para el equipo', leaf:{letra:'d',cod:'241',desc:'Servicios prestados por alimentación del personal de apoyo de la campaña',prov:true}},
+          {id:'g-brig-rem',    icon:'ti-cash',            label:'Brigadistas, cuidadores de menores o personas', desc:'Servicios remunerados: sueldo, bono, vale, viático o compensación', leaf:{letra:'d',cod:'242',desc:'Servicios remunerados de brigadistas, cuidadores de menores o personas',prov:true}},
+          {id:'g-agencia',     icon:'ti-building',        label:'Agencia, subcontratación o tercerización', desc:'Contrató una empresa para prestar servicios a la campaña', leaf:{letra:'d',cod:'243',desc:'Servicios prestados por medio de agencia, subcontratación o tercerización',prov:true}},
+          {id:'g-admin',       icon:'ti-calculator',      label:'Administrador/a electoral', desc:'Servicios remunerados de quien lleva la contabilidad y rendición', leaf:{letra:'d',cod:'244',desc:'Servicios remunerados del administrador electoral',prov:true}},
+          {id:'g-digital',     icon:'ti-brand-instagram', label:'Gestión integral de redes sociales y contenidos digitales', desc:'Community manager, encargado/a de programa, diseñador/a, productor/a audiovisual', leaf:{letra:'d',cod:'245',desc:'Servicio de gestión integral de redes sociales y contenidos digitales',prov:true}},
+          {id:'g-territorial', icon:'ti-map',             label:'Coordinación territorial', desc:'Jefe/a de programación y avanzada, gestor/a territorial', leaf:{letra:'d',cod:'246',desc:'Servicio de coordinación territorial',prov:true}},
+          {id:'g-prensa-p',    icon:'ti-microphone',      label:'Encargado/a de comunicaciones', desc:'Jefe/a de comunicaciones, periodistas, prensa', leaf:{letra:'d',cod:'247',desc:'Servicio de encargado de comunicaciones',prov:true}},
+          {id:'g-otro-serv',   icon:'ti-dots-circle-horizontal', label:'Otros servicios prestados para la campaña', desc:'Cualquier otro servicio remunerado', leaf:{letra:'d',cod:'248',desc:'Otros servicios prestados para la campaña',prov:true}},
+        ]
+      },
+      {
+        id:'g-traslado', icon:'ti-car', label:'Para trasladarme o trasladar al equipo', q:'¿Qué tipo de traslado o estadía fue?',
+        desc:'Combustible, peajes, taxi, Uber, pasajes, transporte',
+        children:[
+          {id:'g-combustible', icon:'ti-gas-station', label:'Combustible, peaje o vehículo propio', desc:'Bencina, gas, TAG, peaje de autopista', leaf:{letra:'e',cod:'251',desc:'Combustible, peaje o transporte privado',prov:false}},
+          {id:'g-taxi',        icon:'ti-car',          label:'Taxi, Uber, Cabify, bus u otro', desc:'Transporte público o por aplicación',              leaf:{letra:'e',cod:'253',desc:'Transporte público terrestre',prov:false}},
+          {id:'g-aereo',       icon:'ti-plane',        label:'Pasaje aéreo', desc:'Vuelo para actividades de campaña',                                   leaf:{letra:'e',cod:'252',desc:'Transporte aéreo — pasajes comerciales',prov:false}},
+        ]
+      },
+      {
+        id:'g-credito', icon:'ti-building-bank', label:'Costos de un crédito o cuenta bancaria', q:'¿Qué costo bancario es?',
+        desc:'Intereses de préstamo electoral, comisiones bancarias',
+        children:[
+          {id:'g-interes',   icon:'ti-percentage',  label:'Interés o costo de un préstamo electoral', desc:'Interés, comisión o gasto por crédito bancario', leaf:{letra:'f',cod:'511',desc:'Intereses y costos del crédito electoral',prov:false}},
+          {id:'g-comision',  icon:'ti-credit-card', label:'Comisión de la cuenta bancaria electoral', desc:'Cargo mensual o por transacción de la cuenta SERVEL', leaf:{letra:'i',cod:'512',desc:'Comisión bancaria de la cuenta electoral',prov:false}},
+        ]
+      },
+      {
+        id:'g-menores', icon:'ti-shopping-bag', label:'Gastos pequeños del día a día', q:'¿Qué tipo de gasto menor fue?',
+        desc:'Comida del equipo, agua, luz, teléfono, insumos menores',
+        children:[
+          {id:'g-servicios', icon:'ti-bulb',             label:'Luz, agua o teléfono de la sede', desc:'Servicios básicos del local o sede',               leaf:{letra:'g',cod:'262',desc:'Gastos básicos de la sede',prov:false}},
+          {id:'g-insumos',   icon:'ti-tool',            label:'Mantención, insumos u otros gastos menores', desc:'Reparación, limpieza, papelería, materiales de oficina', leaf:{letra:'g',cod:'261',desc:'Gastos menores y frecuentes de campaña',prov:false}},
+        ]
+      },
+      {
+        id:'g-voluntarios', icon:'ti-heart-handshake', label:'Trabajo de brigadistas o voluntarios', q:'¿Qué tipo de aporte voluntario fue?', qhelp:'Estos aportes no se pagan, pero deben valorizarse a precio de mercado.',
+        desc:'Personas que trabajaron en la calle sin recibir sueldo',
+        children:[
+          {id:'g-vol-terreno',  icon:'ti-run',               label:'En terreno: repartir material, pegar afiches, marchar', desc:'Sin ningún tipo de remuneración ni compensación', leaf:{letra:'h',cod:'271',desc:'Valorización trabajo voluntarios en terreno',prov:false}},
+          {id:'g-vol-digital',  icon:'ti-device-mobile',     label:'Apoyo digital: publicar, compartir, crear contenido', desc:'Voluntarios que apoyaron en redes sociales sin cobro', leaf:{letra:'h',cod:'278',desc:'Valorización aporte en medios digitales',prov:false}},
+          {id:'g-vol-prof',     icon:'ti-school',            label:'Servicios profesionales sin cobro', desc:'Abogado, contador, diseñador, ingeniero, consultor', leaf:{letra:'h',cod:'279',desc:'Valorización servicios profesionales voluntarios',prov:false}},
+          {id:'g-vol-espacio',  icon:'ti-home',              label:'Prestaron un espacio o bien sin cobrar', desc:'Cedió su casa, auto o equipo gratis para la campaña', leaf:{letra:'h',cod:'272',desc:'Valorización uso de inmueble propio o de tercero',prov:false}},
+        ]
+      },
+    ]
+  },
+
+  {
+    id:'ingreso', icon:'ti-cash', label:'Registrar un ingreso', q:'¿De dónde vino el dinero o aporte?', docQ:'¿Qué documento respalda este ingreso?',
+    desc:'Recibí dinero o aportes para la campaña',
+    kind:'ing',
+    children:[
+      {
+        id:'i-propio', icon:'ti-user', label:'Lo puse yo mismo/a', q:'¿Cómo hizo su aporte propio?',
+        desc:'Dinero de mi propio bolsillo para la campaña',
+        children:[
+          {id:'i-p-dinero',   icon:'ti-cash',    label:'En dinero', desc:'Transferí o deposité desde mi cuenta personal a la cuenta electoral', leaf:{tipo:'ingreso',cod:'1111',desc:'Aporte propio en dinero',prov:false}},
+          {id:'i-p-especie',  icon:'ti-package', label:'En bienes o servicios propios', desc:'Bienes de mi propiedad que usé para la campaña', leaf:{tipo:'ingreso',cod:'1112',desc:'Aporte propio en especies o servicios',prov:false}},
+        ]
+      },
+      {
+        id:'i-tercero', icon:'ti-heart-handshake', label:'Me lo aportó otra persona', q:'¿Qué tipo de aporte recibió?',
+        desc:'Un/a ciudadano/a hizo un aporte en dinero, bienes o servicios',
+        children:[
+          {id:'i-t-dinero',  icon:'ti-cash',            label:'Aporte en dinero de un/a ciudadano/a', desc:'Transferencia, depósito o efectivo de un/a particular', leaf:{tipo:'ingreso',cod:'1121',desc:'Aporte de tercero en dinero',prov:true,aport:true}},
+          {id:'i-t-especie', icon:'ti-package',         label:'Aporte en especies de un/a ciudadano/a', desc:'Bienes, materiales u otros aportes no monetarios',      leaf:{tipo:'ingreso',cod:'1122',desc:'Aporte de tercero en especies',prov:true,aport:true}},
+          {id:'i-t-credito', icon:'ti-building-bank',   label:'Crédito bancario para la campaña', desc:'Préstamo electoral otorgado por una institución financiera', leaf:{tipo:'ingreso',cod:'1131',desc:'Crédito bancario para financiamiento electoral',prov:true}},
+        ]
+      },
+      {
+        id:'i-partido', icon:'ti-flag', label:'Vino del partido político', q:'¿Qué le entregó el partido?',
+        desc:'Mi partido me transfirió fondos o hizo un aporte',
+        children:[
+          {id:'i-pt-dinero',  icon:'ti-cash',    label:'Transferencia en dinero del partido', desc:'Fondos transferidos desde la cuenta del partido', leaf:{tipo:'ingreso',cod:'1141',desc:'Aporte del partido político en dinero',prov:false}},
+          {id:'i-pt-especie', icon:'ti-package', label:'Aporte en especies del partido', desc:'El partido donó equipos, materiales o prestó servicios', leaf:{tipo:'ingreso',cod:'1142',desc:'Aporte del partido político en especies',prov:false}},
+        ]
+      },
+      {
+        id:'i-estado', icon:'ti-building-bank', label:'Vino del Estado (SERVEL)', q:'¿Qué recibió del SERVEL?',
+        desc:'Anticipo fiscal o reembolso de gastos',
+        children:[
+          {id:'i-e-anticipo',  icon:'ti-cash',        label:'Anticipo fiscal al inicio de la campaña', desc:'Fondos entregados por el SERVEL antes de la elección', leaf:{tipo:'ingreso',cod:'1151',desc:'Anticipo fiscal SERVEL',prov:false}},
+          {id:'i-e-reembolso', icon:'ti-arrow-back-up',label:'Reembolso de gastos electorales', desc:'Devolución de gastos una vez rendida la cuenta', leaf:{tipo:'ingreso',cod:'1152',desc:'Reembolso electoral SERVEL',prov:false}},
+        ]
+      },
+    ]
+  },
+
+  {
+    id:'donacion', icon:'ti-gift', label:'Registrar un bien o servicio donado', q:'¿Quién hizo la donación?', docQ:'¿Qué documento respalda esta donación?',
+    desc:'Donación en bienes, especies o servicios — valorizar a precio de mercado',
+    kind:'don',
+    children:[
+      {
+        id:'d-particular', icon:'ti-user', label:'Un/a ciudadano/a particular',
+        desc:'Persona natural que donó bienes, materiales o prestó un servicio sin cobrar',
+        leaf:{tipo:'donacion',cod:'121',desc:'Donación en especies o servicios de un particular',aport:true,rut:true,warn:'Art. 9 y 46 Ley 19.884 — valorizar a precio de mercado'}
+      },
+      {
+        id:'d-partido', icon:'ti-flag', label:'El partido político',
+        desc:'El partido donó equipos, materiales o prestó servicios a la candidatura',
+        leaf:{tipo:'donacion',cod:'122',desc:'Donación en especies o servicios del partido político',warn:'Art. 9 y 46 Ley 19.884 — valorizar a precio de mercado'}
+      },
+      {
+        id:'d-bien', icon:'ti-home', label:'Alguien prestó un espacio o bien sin cobrar', q:'¿Qué bien le prestaron?',
+        desc:'Cedió su casa, local, auto, equipos u otros bienes de forma gratuita',
+        children:[
+          {id:'d-inmueble',  icon:'ti-building',     label:'Casa, local u oficina', desc:'Valorizar según precio de arriendo de mercado del mismo tipo de inmueble', leaf:{tipo:'donacion',cod:'276',desc:'Donación — uso de inmueble de tercero valorizado a precio de mercado',aport:true,warn:'Valorizar según arriendo de mercado equivalente'}},
+          {id:'d-vehiculo',  icon:'ti-car',          label:'Auto, furgón u otro vehículo', desc:'Valorizar según precio de arriendo de mercado del mismo tipo de vehículo', leaf:{tipo:'donacion',cod:'275',desc:'Donación — uso de vehículo de tercero valorizado a precio de mercado',aport:true,warn:'Valorizar según arriendo de mercado equivalente'}},
+          {id:'d-equipos',   icon:'ti-package',      label:'Equipos, materiales u otros bienes', desc:'Valorizar según precio de mercado de uso o compra equivalente', leaf:{tipo:'donacion',cod:'277',desc:'Donación — otros bienes o materiales de tercero valorizado a precio de mercado',aport:true,warn:'Valorizar según precio de mercado'}},
+          {id:'d-digital',   icon:'ti-device-mobile',label:'Plataforma digital o espacio en redes sociales', desc:'Valorizar según tarifa publicada de publicidad equivalente', leaf:{tipo:'donacion',cod:'278',desc:'Donación — aporte de medios digitales o redes sociales valorizado a precio de mercado',aport:true,warn:'Valorizar según tarifa publicitaria de mercado'}},
+        ]
+      },
+      {
+        id:'d-servicio', icon:'ti-tool', label:'Alguien prestó un servicio profesional gratis', q:'¿Qué servicio le prestaron?',
+        desc:'Abogado, contador, diseñador u otro profesional que trabajó sin cobrar',
+        children:[
+          {id:'d-prof',       icon:'ti-briefcase',       label:'Servicio profesional o técnico', desc:'Abogado, contador, diseñador, ingeniero — valorizado a tarifa de mercado', leaf:{tipo:'donacion',cod:'279',desc:'Donación — servicio profesional valorizado a precio de mercado',aport:true,warn:'Valorizar según tarifa de mercado habitual'}},
+          {id:'d-voluntario', icon:'ti-heart-handshake', label:'Trabajo de brigadista o activista sin pago', desc:'Persona que trabajó sin recibir ninguna compensación', leaf:{tipo:'donacion',cod:'271',desc:'Donación — trabajo voluntario valorizado a precio de mercado',aport:true,warn:'Valorizar a precio de mercado'}},
+        ]
+      },
+    ]
+  },
+];
+
+/* ═══════════════════════════════════════════════
+   DOCUMENTOS DE RESPALDO
+   "only" limita las categorías que se ofrecen después
+   (ids de cualquier nivel del árbol; null = todas)
+═══════════════════════════════════════════════ */
+const DOCS = {
+  gasto:[
+    {id:'bol',      icon:'ti-receipt',          label:'Boleta de venta o servicios',       desc:'Boleta electrónica de tienda, imprenta, restaurante, bencinera', only:['g-difundir','g-arriendo','g-traslado','g-menores','g-personas']},
+    {id:'fac',      icon:'ti-file-invoice',     label:'Factura',         desc:'Emitida a nombre de la candidatura o del administrador electoral', only:['g-difundir','g-encuesta','g-arriendo','g-personas','g-traslado','g-menores']},
+    {id:'bhe',      icon:'ti-file-certificate', label:'Boleta de honorarios',  desc:'La emite la persona que prestó el servicio', only:['g-encuesta','g-personas']},
+    {id:'bter',     icon:'ti-file-pencil',      label:'Boleta de prestación de servicios de terceros', desc:'La emite usted cuando la persona no puede emitir boleta', only:['g-personas']},
+    {id:'liq',      icon:'ti-file-dollar',      label:'Contrato', desc:'Personal contratado con vínculo laboral', only:['g-personas']},
+    {id:'contrato', icon:'ti-file-text',        label:'Contrato de arriendo',              desc:'Local, sede, vehículo, equipos o espacio publicitario', only:['g-arriendo']},
+    {id:'ticket',   icon:'ti-ticket',           label:'Ticket o comprobante electrónico',  desc:'Uber, Cabify, taxi, peaje, TAG, bencina', only:['g-traslado','g-menores','g-personas']},
+    {id:'pasaje',   icon:'ti-plane',            label:'Pasaje o tarjeta de embarque',      desc:'Avión o bus interurbano', only:['g-aereo','g-taxi']},
+    {id:'recibo',   icon:'ti-note',             label:'Recibo simple o comprobante de pago', desc:'Documento firmado por quien recibió el dinero', only:['g-menores','g-traslado','g-personas']},
+    {id:'otro',     icon:'ti-dots-circle-horizontal', label:'Otro documento',             desc:'', only:null},
+  ],
+  ingreso:[
+    {id:'transf',   icon:'ti-arrows-exchange',  label:'Comprobante de transferencia o depósito', desc:'Desde su cuenta, la de un tercero o la del partido', only:['i-p-dinero','i-t-dinero','i-pt-dinero']},
+    {id:'certserv', icon:'ti-certificate',      label:'Certificado o comprobante de aporte SERVEL', desc:'Aporte de un/a ciudadano/a canalizado por el SERVEL', only:['i-t-dinero']},
+    {id:'credito',  icon:'ti-building-bank',    label:'Contrato o pagaré de crédito',      desc:'Préstamo electoral de una institución financiera', only:['i-t-credito']},
+    {id:'resol',    icon:'ti-stamp',            label:'Resolución o comprobante del SERVEL', desc:'Anticipo fiscal o reembolso de gastos', only:['i-estado']},
+    {id:'declar',   icon:'ti-signature',        label:'Declaración de aporte en especies', desc:'Documento que describe el bien o servicio aportado', only:['i-p-especie','i-t-especie','i-pt-especie']},
+    {id:'cartola',  icon:'ti-list-details',     label:'Cartola de la cuenta electoral',    desc:'El movimiento aparece en el estado de cuenta', only:null},
+    {id:'otro',     icon:'ti-dots-circle-horizontal', label:'Otro documento',             desc:'', only:null},
+  ],
+  donacion:[
+    {id:'acta',     icon:'ti-signature',        label:'Declaración o acta de donación firmada', desc:'Firmada por quien donó el bien o servicio', only:null},
+    {id:'comodato', icon:'ti-file-text',        label:'Contrato de comodato o préstamo de uso', desc:'Casa, local, vehículo o equipos prestados', only:['d-bien']},
+    {id:'certpart', icon:'ti-flag',             label:'Certificado del partido político',  desc:'El partido acredita el aporte en especies', only:['d-partido']},
+    {id:'cotiz',    icon:'ti-report-money',     label:'Cotización o precio de referencia', desc:'Respalda el valor de mercado del aporte', only:null},
+    {id:'otro',     icon:'ti-dots-circle-horizontal', label:'Otro documento o todavía no lo tengo', desc:'Verá todas las opciones', only:null},
+  ],
+};
+
+/* preguntas finales según el tipo de registro */
+const Q_PAGO = {key:'pago', short:'Pago:', q:'¿Ya pagó este gasto?', help:'Si no lo pagó, quedará pendiente a la espera del reembolso del Servicio Electoral.', options:[
+  {id:'pagado',    icon:'ti-circle-check', label:'Sí, ya está pagado',  desc:'El dinero ya salió'},
+  {id:'pendiente', icon:'ti-clock',        label:'No lo pagué: busco reembolso del Servicio Electoral', desc:'Queda pendiente hasta que el SERVEL lo reembolse'},
+]};
+const Q_MEDIO = {key:'medio', short:'Medio:', q:'¿Con qué medio lo pagó?', help:'Los gastos electorales se pagan desde la cuenta bancaria electoral o con un crédito con mandato.', options:[
+  {id:'transf',   icon:'ti-arrows-exchange', label:'Transferencia desde la cuenta electoral', desc:'Pago electrónico al proveedor'},
+  {id:'debito',   icon:'ti-credit-card',     label:'Tarjeta de débito de la cuenta electoral', desc:'Pago con tarjeta en el comercio'},
+  {id:'efectivo', icon:'ti-coins',           label:'Efectivo girado de la cuenta electoral', desc:'Giro para gastos menores'},
+  {id:'mandato',  icon:'ti-file-certificate', label:'Pagado con crédito con mandato', desc:'El pago se hizo con cargo a un crédito con mandato'},
+]};
+const Q_VALORIZ = {key:'valoriz', short:'Valor:', q:'¿Cómo determinó el valor de mercado?', help:'Todo aporte en especies o trabajo voluntario debe valorizarse a precio de mercado (Art. 9 y 46 Ley 19.884).', options:[
+  {id:'cotiz',   icon:'ti-report-money', label:'Cotización de un proveedor', desc:'Pidió un presupuesto por lo mismo'},
+  {id:'publico', icon:'ti-world',        label:'Precio publicado',           desc:'Sitio web, catálogo o tarifa pública'},
+  {id:'tarifa',  icon:'ti-briefcase',    label:'Tarifa habitual de la persona', desc:'Lo que cobra normalmente por ese trabajo'},
+  {id:'estim',   icon:'ti-calculator',   label:'Estimación propia',          desc:'Cálculo razonable sin documento de respaldo'},
+]};
+const Q_RECEP = {key:'recep', short:'Recepción:', q:'¿Cómo llegó el dinero a la cuenta electoral?', options:[
+  {id:'transf',  icon:'ti-arrows-exchange', label:'Transferencia electrónica', desc:'Desde otra cuenta bancaria'},
+  {id:'deposito',icon:'ti-cash',            label:'Depósito en efectivo',      desc:'En caja o cajero'},
+  {id:'cheque',  icon:'ti-writing',         label:'Depósito de cheque o vale vista', desc:'Documento bancario depositado'},
+]};
+const ESPECIE_COD = ['1112','1122','1142'];
+
+/* ═══════════════════════════════════════════════
+   ASISTENTE DE PREGUNTAS
+═══════════════════════════════════════════════ */
+function optFromNode(n){
+  const o = {id:n.id, icon:n.icon, label:n.label, desc:n.desc, badges:''};
+  return o;
+}
+function allowed(n, only){
+  if(only.has(n.id)) return true;
+  return !!(n.children && n.children.some(c=>allowed(c, only)));
+}
+function docLabelById(id){
+  for(const k in DOCS){ const d = DOCS[k].find(x=>x.id===id); if(d) return d.label; }
+  return '';
+}
+
+// Construye la lista de preguntas según lo que ya se respondió
+function getSteps(){
+  const steps = [];
+  steps.push({key:'tipo', q:'¿Qué desea rendir?', help:'Empiece por lo general: ¿salió dinero, entró dinero o recibió algo sin pagar?',
+    options: TREE.map(n=>({...optFromNode(n), badges:`<span class="nb-badge ${n.kind}">${n.kind==='gas'?'Gasto electoral':n.kind==='ing'?'Ingreso':'Donación'}</span>`}))});
+  if(!ans.tipo) return steps;
+
+  const top = TREE.find(n=>n.id===ans.tipo);
+  steps.push({key:'doc', short:'Documento:', q:top.docQ,
+    help:'Elija el documento que tiene a mano. Si subió una foto o PDF arriba, marcamos el que detectamos.',
+    options:(DOCS[top.id]||[]).map(d=>({...d, sug: ocr.tipodoc===d.id,
+      badges: ocr.tipodoc===d.id ? '<span class="nb-badge sug"><i class="ti ti-sparkles"></i> Detectado en su documento</span>' : ''}))});
+  if(!ans.doc) return steps;
+
+  const doc = (DOCS[top.id]||[]).find(d=>d.id===ans.doc);
+  const only = doc && doc.only ? new Set(doc.only) : null;
+  let node = top, lvl = 1, open = !only;
+  while(node.children){
+    const key = 'n'+lvl;
+    const opts = node.children.filter(c=>open || allowed(c, only));
+    steps.push({key, short: lvl===1 ? 'Categoría:' : 'Detalle:', q:node.q || '¿Cuál de estas opciones corresponde?', help:node.qhelp || '', options:opts.map(optFromNode)});
+    const child = node.children.find(c=>c.id===ans[key]);
+    if(!child) return steps;
+    if(only && only.has(child.id)) open = true;
+    node = child; lvl++;
+  }
+
+  const L = node.leaf || {};
+  if(L.letra && L.letra!=='h'){
+    steps.push(Q_PAGO);
+    if(ans.pago==='pagado') steps.push(Q_MEDIO);
+  } else if(L.letra==='h' || L.tipo==='donacion' || ESPECIE_COD.includes(L.cod)){
+    steps.push(Q_VALORIZ);
+  } else if(L.tipo==='ingreso'){
+    steps.push(Q_RECEP);
+  }
+  return steps;
+}
+
+function leafNode(){
+  let node = TREE.find(t=>t.id===ans.tipo), l = 1;
+  while(node && node.children){ node = node.children.find(c=>c.id===ans['n'+l]); l++; }
+  return node && node.leaf ? node : null;
+}
+function wizardDone(){ return getSteps().every(st=>ans[st.key]!=null); }
+
+function clearFrom(key, inclusive){
+  const steps = getSteps();
+  const idx = steps.findIndex(st=>st.key===key);
+  if(idx<0) return;
+  steps.slice(inclusive ? idx : idx+1).forEach(st=>delete ans[st.key]);
+}
+
+function elegir(key, val){
+  if(ans[key]!==val) clearFrom(key, false);
+  ans[key] = val;
+  afterChange();
+}
+function cambiar(key){
+  clearFrom(key, true);
+  afterChange();
+}
+function reiniciar(){
+  ans = {}; editingId = null;
+  afterChange();
+}
+function afterChange(){
+  renderWizard();
+  const leaf = leafNode();
+  if(leaf && wizardDone()){
+    showForm(leaf);
+  } else {
+    document.getElementById('form-area').innerHTML = '';
+    const cur = document.getElementById('wz-current');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(cur) cur.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block:'nearest'});
+  }
+}
+
+function renderWizard(){
+  const steps = getSteps();
+  const curIdx = steps.findIndex(st=>ans[st.key]==null);
+  const done = curIdx === -1;
+  const answered = done ? steps.length : curIdx;
+  const pct = done ? 100 : Math.round(answered / Math.max(steps.length + 2, 6) * 100);
+
+  let html = `
+    <div class="wz-top">
+      <span class="wz-title">${done ? 'Clasificación lista' : 'Responda unas preguntas para registrar'}</span>
+      <span class="wz-count">${done ? answered+' respuestas' : 'Pregunta '+(curIdx+1)}</span>
+      ${answered ? '<button class="wz-restart" onclick="reiniciar()"><i class="ti ti-rotate"></i> Empezar de nuevo</button>' : ''}
+    </div>
+    <div class="wz-prog" aria-hidden="true"><span style="width:${pct}%"></span></div>`;
+
+  steps.forEach((st, i)=>{
+    if(ans[st.key]==null) return;
+    const o = st.options.find(x=>x.id===ans[st.key]);
+    html += `<button class="wz-done" onclick="cambiar('${st.key}')" aria-label="Cambiar respuesta: ${st.q}">
+      <span class="wz-n">${i+1}</span>
+      <span class="wz-dq">${st.q}</span>
+      <span class="wz-da">${o ? '<i class="ti '+o.icon+'"></i>'+o.label : 'Sin especificar'}</span>
+      <span class="wz-edit">Cambiar</span>
+    </button>`;
+  });
+
+  if(!done){
+    const st = steps[curIdx];
+    const prev = curIdx>0 ? steps[curIdx-1].key : null;
+    html += `<section class="wz-card" id="wz-current" aria-live="polite">
+      <div class="wz-step">Pregunta ${curIdx+1}</div>
+      <h3 class="wz-q">${st.q}</h3>
+      ${st.help ? '<p class="wz-help">'+st.help+'</p>' : '<div style="height:12px"></div>'}
+      <div class="wz-opts">
+        ${st.options.map(o=>`
+          <button class="wz-opt${o.sug?' sug':''}" onclick="elegir('${st.key}','${o.id}')">
+            <i class="ti ${o.icon} nb-ico"></i>
+            <span class="nb-txt">
+              <span class="nb-titulo">${o.label}</span>
+              <span class="nb-desc">${o.desc||''}</span>
+              ${o.badges ? '<span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;align-items:center">'+o.badges+'</span>' : ''}
+            </span>
+          </button>`).join('')}
+      </div>
+      ${prev ? `<div class="wz-foot"><button class="wz-back" onclick="cambiar('${prev}')"><i class="ti ti-arrow-left"></i> Pregunta anterior</button></div>` : ''}
+    </section>`;
+  } else {
+    html += `<div class="wz-ok"><i class="ti ti-circle-check"></i> Listo. Complete los datos del documento aquí abajo.</div>`;
+  }
+
+  document.getElementById('wizard').innerHTML = html;
+}
+
+function pathTo(nodes, id, acc=[]){
+  for(const n of nodes){
+    if(n.id===id) return [...acc, n.id];
+    if(n.children){ const r = pathTo(n.children, id, [...acc, n.id]); if(r) return r; }
+  }
+  return null;
+}
+
+
+/* ═══════════════════════════════════════════════
+   FORMULARIO DE DATOS
+═══════════════════════════════════════════════ */
+function showForm(node){
+  const L = node.leaf;
+  const esGasto   = L.letra !== undefined;
+  const esDon     = L.tipo === 'donacion';
+  const esIngreso = L.tipo === 'ingreso';
+  const needProv  = L.prov;
+  const needAport = L.aport;
+  const needRut   = L.rut;
+  const isEdit = !!editingId;
+  const src = isEdit ? (regs.find(r=>r.id===editingId) || {}) : ocr;
+
+  const bClass = esGasto?'gas':esDon?'don':'ing';
+  const bTxt   = esGasto?'Gasto · Letra '+(L.letra||'')+(L.cod?' · Cód. '+L.cod:''):esDon?'Donación · Cód. '+L.cod:'Ingreso · Cód. '+L.cod;
+
+  const warnHtml = (L.warn||esDon) ? `
+    <div class="aviso av-warn">
+      <i class="ti ti-alert-triangle"></i>
+      <span>${L.warn||'Toda donación debe valorizarse a precio de mercado (Art. 9 y 46 Ley 19.884).'}</span>
+    </div>` : '';
+
+  const editBannerHtml = isEdit ? `
+    <div class="edit-banner">
+      <i class="ti ti-pencil"></i>
+      <span>Editando un registro guardado.</span>
+      <button onclick="cancelForm()">Cancelar edición</button>
+    </div>` : '';
+
+  const infoHtml = (!isEdit && (ocr.monto||ocr.fecha)) ? `
+    <div class="aviso av-info">
+      <i class="ti ti-scan"></i>
+      <span>Datos completados automáticamente desde el documento escaneado. Revise y corrija si es necesario.</span>
+    </div>` : '';
+
+  const provLabel = esGasto ? 'Proveedor' : esDon ? 'Donante' : 'Destinatario';
+  const aportLabel = esDon ? 'Nombre del donante' : 'Nombre del aportante';
+
+  const provHtml = needProv ? `
+    <div class="campo">
+      <label>${provLabel}</label>
+      <input type="text" id="f-prov" placeholder="${provLabel}…" value="${src.prov||''}">
+    </div>` : '';
+
+  const aportHtml = needAport ? `
+    <div class="campo">
+      <label>${aportLabel}</label>
+      <input type="text" id="f-aport" placeholder="${aportLabel}…" value="${src.aport||''}">
+    </div>` : '';
+
+  const rutHtml = needRut ? `
+    <div class="campo">
+      <label>RUT del donante</label>
+      <input type="text" id="f-rut" placeholder="12.345.678-9" value="${src.rut||''}">
+    </div>` : '';
+
+  const medioWarn = ans.pago==='pendiente' ? `
+    <div class="aviso av-info">
+      <i class="ti ti-info-circle"></i>
+      <span>Este gasto quedará pendiente: solicita su reembolso al Servicio Electoral.</span>
+    </div>` : '';
+
+  const chips = getSteps().filter(st=>st.key!=='tipo').map(st=>{
+    const o = st.options.find(x=>x.id===ans[st.key]);
+    return o ? `<span class="ocr-tag"><strong>${st.short||''}</strong> ${o.label}</span>` : '';
+  }).join('');
+
+  const html = `
+    <div class="form-panel" id="form-panel">
+      <h3>
+        <i class="ti ti-forms"></i>
+        ${isEdit ? 'Editar registro' : 'Completar datos'}
+        <span class="fp-badge ${bClass}" style="">${bTxt}</span>
+      </h3>
+      <div class="fp-chips">${chips}</div>
+      ${editBannerHtml}
+      ${infoHtml}
+      ${warnHtml}
+      ${medioWarn}
+      <div class="campo">
+        <label>Descripción del ${esGasto?'gasto':esDon?'bien o servicio donado':'ingreso'}</label>
+        <input type="text" id="f-desc" placeholder="${L.desc}" value="${src.desc||''}">
+      </div>
+      <div class="dos">
+        <div class="campo">
+          <label>Monto (CLP)</label>
+          <input type="number" id="f-monto" placeholder="0" min="0" class="${!isEdit && ocr.monto?'ocr-filled':''}" value="${src.monto||''}">
+        </div>
+        <div class="campo">
+          <label>Fecha</label>
+          <input type="date" id="f-fecha" class="${!isEdit && ocr.fecha?'ocr-filled':''}" value="${src.fecha||today()}">
+        </div>
+      </div>
+      ${provHtml}
+      ${aportHtml}
+      ${rutHtml}
+      <div class="campo">
+        <label>N° de documento (boleta, factura, recibo…)</label>
+        <input type="text" id="f-ndoc" placeholder="Opcional" value="${src.ndoc||''}">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-s" onclick="cancelForm()"><i class="ti ti-x"></i> Cancelar</button>
+        <button class="btn btn-p" onclick="guardar()"><i class="ti ${isEdit?'ti-refresh':'ti-check'}"></i> ${isEdit ? 'Actualizar registro' : 'Guardar registro'}</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('form-area').innerHTML = html;
+  document.getElementById('form-area').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function cancelForm(){
+  ans = {};
+  editingId = null;
+  document.getElementById('form-area').innerHTML = '';
+  renderWizard();
+}
+
+function guardar(){
+  const desc  = document.getElementById('f-desc')?.value.trim() || '';
+  const monto = parseFloat(document.getElementById('f-monto')?.value);
+  const fecha = document.getElementById('f-fecha')?.value || '';
+  if(!monto||monto<=0){ showToast('⚠️ Ingrese un monto válido'); document.getElementById('f-monto')?.focus(); return; }
+  if(!fecha){ showToast('⚠️ Ingrese la fecha'); document.getElementById('f-fecha')?.focus(); return; }
+
+  // Buscar la hoja seleccionada
+  const node = leafNode();
+  if(!node){ showToast('⚠️ Responda todas las preguntas primero'); return; }
+  const L = node.leaf;
+  const docO = (DOCS[ans.tipo]||[]).find(d=>d.id===ans.doc);
+  const extra = getSteps().find(st=>['medio','valoriz','recep'].includes(st.key));
+  const extraO = extra ? extra.options.find(o=>o.id===ans[extra.key]) : null;
+
+  const reg = {
+    id:    editingId || Date.now(),
+    nodeId: node.id,
+    tipo:  L.letra ? 'gasto' : (L.tipo||'ingreso'),
+    letra: L.letra||'',
+    cod:   L.cod||'',
+    desc:  desc || L.desc,
+    monto, fecha,
+    prov:  document.getElementById('f-prov')?.value.trim()||'',
+    aport: document.getElementById('f-aport')?.value.trim()||'',
+    rut:   document.getElementById('f-rut')?.value.trim()||'',
+    ndoc:  document.getElementById('f-ndoc')?.value.trim()||'',
+    pago:  ans.pago || '',
+    doc:   docO ? docO.label : '',
+    medio: extraO ? extraO.label : '',
+    ans:   {...ans},
+  };
+
+  if(editingId){
+    const idx = regs.findIndex(r=>r.id===editingId);
+    if(idx>-1) regs[idx] = reg; else regs.push(reg);
+  } else {
+    regs.push(reg);
+  }
+
+  save();
+  actualizarTotales();
+  const wasEdit = !!editingId;
+  cancelForm();
+  showToast(wasEdit ? '✓ Registro actualizado' : '✓ Registro guardado');
+  if(document.getElementById('resumen-area').style.display!=='none') buildLista();
+}
+
+function findNode(nodes, id){
+  for(const n of nodes){
+    if(n.id===id) return n;
+    if(n.children){ const r=findNode(n.children,id); if(r) return r; }
+  }
+  return null;
+}
+
+/* ═══════════════════════════════════════════════
+   OCR — Anthropic API
+═══════════════════════════════════════════════ */
+document.getElementById('ocrFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  if(!apikey){
+    showToast('⚠️ Configura tu API key de Anthropic para usar el OCR', 4000);
+    toggleApikeyForm(true);
+    e.target.value = '';
+    return;
+  }
+
+  const isPDF = file.type === 'application/pdf';
+  const isImg = file.type.startsWith('image/');
+  if(!isPDF && !isImg){ showToast('⚠️ Solo se aceptan imágenes o PDF'); e.target.value=''; return; }
+
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    const b64  = ev.target.result.split(',')[1];
+    const mime = file.type;
+
+    document.getElementById('ocrDrop').style.display = 'none';
+    document.getElementById('ocrPreview').classList.remove('show');
+    document.getElementById('ocrSpin').classList.add('show');
+    document.getElementById('ocrSpinMsg').textContent = isPDF
+      ? 'Leyendo PDF con IA…'
+      : 'Leyendo imagen con IA…';
+
+    // Miniatura en el resultado
+    const thumb = document.getElementById('ocrThumb');
+    if(isPDF){
+      thumb.innerHTML = `<div class="pdf-ico"><i class="ti ti-file-type-pdf"></i><span>PDF</span></div>`;
+    } else {
+      thumb.innerHTML = `<img src="${ev.target.result}" alt="doc">`;
+    }
+
+    // Construir content según tipo
+    const docContent = isPDF
+      ? { type:'document', source:{ type:'base64', media_type:'application/pdf', data:b64 } }
+      : { type:'image',    source:{ type:'base64', media_type:mime,               data:b64 } };
+
+    const SYSTEM = `Eres un asistente especializado en rendiciones electorales chilenas (SERVEL, Ley 19.884).
+Analiza el documento adjunto (boleta, factura, ticket, comprobante, recibo, contrato, liquidación, etc.) y extrae los datos relevantes.
+Responde SOLO con un objeto JSON con estas claves posibles:
+- monto: número total (sin puntos ni $, solo dígitos y punto decimal si aplica)
+- fecha: en formato YYYY-MM-DD
+- desc: descripción breve del bien o servicio (máx 80 caracteres)
+- prov: nombre del proveedor, empresa o emisor
+- ndoc: número de boleta, factura, folio o documento
+- rut: RUT del emisor si aparece (con guión, ej: 76.123.456-7)
+- tipodoc: el tipo de documento, usando SOLO uno de estos códigos: bol (boleta de venta o servicios), fac (factura afecta o exenta), bhe (boleta de honorarios), bter (boleta de prestación de servicios de terceros), ticket (ticket o comprobante: Uber, taxi, peaje, TAG, bencina), pasaje (pasaje o tarjeta de embarque), contrato (contrato de arriendo), liq (contrato de trabajo o de prestación de servicios), recibo (recibo simple), transf (comprobante de transferencia o depósito), credito (contrato o pagaré de crédito), comodato (contrato de comodato o préstamo de uso), cotiz (cotización)
+Si un campo no aparece en el documento, omítelo (no escribas null ni "").
+Solo incluye lo que puedas leer claramente.
+Responde ÚNICAMENTE el JSON plano, sin texto adicional, sin markdown, sin explicaciones.`;
+
+    try {
+      const headers = {
+        'Content-Type':'application/json',
+        'x-api-key': apikey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      };
+      if(isPDF) headers['anthropic-beta'] = 'pdfs-2024-09-25';
+
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: SYSTEM,
+          messages:[{
+            role:'user',
+            content:[
+              docContent,
+              {type:'text', text:'Extrae los datos de este documento para una rendición electoral.'}
+            ]
+          }]
+        })
+      });
+
+      const data = await resp.json();
+
+      // Diagnóstico visible si la API devuelve error
+      if(!resp.ok || data.error){
+        const msg = data.error?.message || `Error ${resp.status}`;
+        document.getElementById('ocrSpin').classList.remove('show');
+        document.getElementById('ocrDrop').style.display = 'flex';
+        showToast('⚠️ ' + msg, 5000);
+        return;
+      }
+
+      const txt  = (data.content||[]).map(c=>c.text||'').join('');
+      let parsed = {};
+      try {
+        const clean = txt.replace(/```json|```/g,'').trim();
+        // Extraer primer bloque JSON si hay texto alrededor
+        const match = clean.match(/\{[\s\S]*\}/);
+        parsed = match ? JSON.parse(match[0]) : {};
+      } catch(er){ parsed = {}; }
+
+      ocr = parsed;
+
+      document.getElementById('ocrSpin').classList.remove('show');
+      document.getElementById('ocrPreview').classList.add('show');
+
+      const tags = document.getElementById('ocrTags');
+      tags.innerHTML = '';
+      const docLbl = ocr.tipodoc ? docLabelById(ocr.tipodoc) : '';
+      if(docLbl)    tags.innerHTML += `<span class="ocr-tag"><strong>Documento:</strong> ${docLbl}</span>`;
+      if(ocr.monto) tags.innerHTML += `<span class="ocr-tag"><strong>Monto:</strong> ${fmt(ocr.monto)}</span>`;
+      if(ocr.fecha) tags.innerHTML += `<span class="ocr-tag"><strong>Fecha:</strong> ${ffecha(ocr.fecha)}</span>`;
+      if(ocr.prov)  tags.innerHTML += `<span class="ocr-tag"><strong>Emisor:</strong> ${ocr.prov}</span>`;
+      if(ocr.ndoc)  tags.innerHTML += `<span class="ocr-tag"><strong>N°doc:</strong> ${ocr.ndoc}</span>`;
+      if(ocr.rut)   tags.innerHTML += `<span class="ocr-tag"><strong>RUT:</strong> ${ocr.rut}</span>`;
+      if(ocr.desc)  tags.innerHTML += `<span class="ocr-tag"><strong>Desc:</strong> ${ocr.desc}</span>`;
+      if(!tags.innerHTML) tags.innerHTML = `<span class="ocr-tag">No se pudo extraer información del documento</span>`;
+
+      renderWizard();
+      if(leafNode() && wizardDone()) showForm(leafNode());
+
+    } catch(err){
+      document.getElementById('ocrSpin').classList.remove('show');
+      document.getElementById('ocrDrop').style.display = 'flex';
+      showToast('⚠️ ' + (err.message || 'No se pudo procesar el documento'), 5000);
+    }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+function clearOcr(){
+  ocr = {};
+  document.getElementById('ocrPreview').classList.remove('show');
+  document.getElementById('ocrDrop').style.display = 'flex';
+  document.getElementById('ocrTags').innerHTML = '';
+  renderWizard();
+  if(leafNode() && wizardDone()) showForm(leafNode());
+}
+
+// Drag & drop
+const zone = document.getElementById('ocrZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.classList.remove('dragging');
+  const f = e.dataTransfer.files[0];
+  if(f && (f.type.startsWith('image/') || f.type === 'application/pdf')){
+    const dt = new DataTransfer(); dt.items.add(f);
+    document.getElementById('ocrFile').files = dt.files;
+    document.getElementById('ocrFile').dispatchEvent(new Event('change'));
+  } else {
+    showToast('⚠️ Solo se aceptan imágenes o PDF');
+  }
+});
+
+/* ═══════════════════════════════════════════════
+   LISTA / RESUMEN
+═══════════════════════════════════════════════ */
+function toggleResumen(){
+  const el = document.getElementById('resumen-area');
+  const visible = el.style.display !== 'none';
+  el.style.display = visible ? 'none' : 'block';
+  if(!visible) buildLista();
+}
+
+function buildLista(){
+  actualizarTotales();
+  const ing = regs.filter(r=>r.tipo==='ingreso');
+  const gas = regs.filter(r=>r.tipo==='gasto');
+  const don = regs.filter(r=>r.tipo==='donacion');
+  let html = '';
+  if(!regs.length){
+    html='<div class="empty"><i class="ti ti-clipboard-list" style="font-size:28px;display:block;margin:0 auto 8px;color:var(--txt3)"></i>Aún no hay registros.</div>';
+  } else {
+    if(ing.length){ html+='<div class="sec-lbl">Ingresos</div><div class="lista">'+ing.map(liItem).join('')+'</div>'; }
+    if(gas.length){ html+='<div class="sec-lbl">Gastos — Ley 19.884 Art. 2</div><div class="lista">'+gas.map(liItem).join('')+'</div>'; }
+    if(don.length){ html+='<div class="sec-lbl">Donaciones — Art. 9 y 46 Ley 19.884</div><div class="lista">'+don.map(liItem).join('')+'</div>'; }
+  }
+  document.getElementById('lista-cuerpo').innerHTML = html;
+}
+
+function liItem(r){
+  const esG=r.tipo==='gasto', esDon=r.tipo==='donacion';
+  const pend=r.pago==='pendiente';
+  const persona=r.prov||r.aport||'';
+  let meta=ffecha(r.fecha);
+  if(r.letra && !['ING','DON'].includes(r.letra)) meta+=' · Letra '+r.letra;
+  if(r.doc) meta+=' · '+r.doc;
+  if(esDon) meta+=' · Donación';
+  if(persona) meta+=' · '+persona;
+  if(esG&&pend) meta+=' · <span style="color:var(--warn)">Pendiente</span>';
+  const col=esG?'color:var(--txt)':esDon?'color:var(--warn)':'color:var(--green)';
+  const sig=esG?'-':'+';
+  return `<div class="li">
+    <div style="flex:1;min-width:0"><div class="li-nom">${r.desc}</div><div class="li-meta">${meta}</div></div>
+    <div class="li-r">
+      <span class="li-monto" style="${col}">${sig} ${fmt(r.monto)}</span>
+      <button class="editbtn" onclick="editar(${r.id})" aria-label="Editar"><i class="ti ti-pencil"></i></button>
+      <button class="delbtn" onclick="borrar(${r.id})" aria-label="Eliminar"><i class="ti ti-trash"></i></button>
+    </div>
+  </div>`;
+}
+
+function findNodeByLeaf(nodes, reg){
+  for(const n of nodes){
+    if(n.leaf){
+      const L = n.leaf;
+      const tipoLeaf = L.letra ? 'gasto' : (L.tipo||'ingreso');
+      if(tipoLeaf===reg.tipo && (L.cod||'')===(reg.cod||'') && (L.letra||'')===(reg.letra||'')) return n;
+    }
+    if(n.children){ const r = findNodeByLeaf(n.children, reg); if(r) return r; }
+  }
+  return null;
+}
+
+function editar(id){
+  const reg = regs.find(r=>r.id===id);
+  if(!reg) return;
+
+  if(reg.ans){
+    ans = {...reg.ans};
+  } else {
+    // registros antiguos (sin respuestas guardadas): reconstruir el camino
+    let node = reg.nodeId ? findNode(TREE, reg.nodeId) : null;
+    if(!node) node = findNodeByLeaf(TREE, reg);
+    const path = node ? pathTo(TREE, node.id) : null;
+    if(!path){ showToast('⚠️ No se pudo encontrar la categoría original de este registro'); return; }
+    ans = {tipo:path[0], doc:'otro'};
+    path.slice(1).forEach((pid,i)=>ans['n'+(i+1)] = pid);
+    if(reg.pago) ans.pago = reg.pago;
+    for(let k=0;k<4;k++){ const st=getSteps().find(x=>ans[x.key]==null); if(!st) break; ans[st.key]='nd'; }
+  }
+
+  editingId = id;
+  renderWizard();
+  const leaf = leafNode();
+  if(leaf) showForm(leaf);
+}
+
+function borrar(id){
+  if(!confirm('¿Eliminar este registro?')) return;
+  regs=regs.filter(r=>r.id!==id); save(); buildLista();
+}
+
+function actualizarTotales(){
+  const ti=regs.filter(r=>r.tipo==='ingreso').reduce((a,r)=>a+r.monto,0);
+  const tg=regs.filter(r=>r.tipo==='gasto').reduce((a,r)=>a+r.monto,0);
+  const sal=ti-tg;
+  const el=id=>document.getElementById(id);
+  if(el('l-ti')) el('l-ti').textContent=fmt(ti);
+  if(el('l-tg')) el('l-tg').textContent=fmt(tg);
+  const sel=el('l-saldo');
+  if(sel){ sel.textContent=fmt(sal); sel.className='saldo-val '+(sal>=0?'s-pos':'s-neg'); }
+  const cnt=el('rt-count'); if(cnt) cnt.textContent=regs.length;
+}
+
+function exportar(){
+  if(!regs.length){ showToast('No hay registros para exportar'); return; }
+  let csv='\uFEFFTipo,Descripción,Letra Art.2,Código SERVEL,Fecha,Monto CLP,Estado,Proveedor/Aportante,Tipo documento,N° Documento,Medio de pago / valorización\n';
+  regs.forEach(r=>{
+    const p=r.prov||r.aport||'';
+    csv+=[
+      r.tipo==='gasto'?'Gasto':r.tipo==='donacion'?'Donación (precio mercado)':'Ingreso',
+      '"'+r.desc+'"',
+      r.letra&&!['ING','DON'].includes(r.letra)?r.letra:r.tipo==='donacion'?'Art.9/46':'—',
+      r.cod, r.fecha,
+      Math.round(r.monto),
+      r.tipo==='gasto'?(r.pago||'pagado'):r.tipo==='donacion'?'valorizado precio mercado':'—',
+      '"'+p+'"','"'+(r.doc||'')+'"','"'+(r.ndoc||'')+'"','"'+(r.medio||'')+'"'
+    ].join(',')+'\n';
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='rendicion-electoral-2025.csv'; a.click();
+}
+
+/* ═══════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════ */
+function fmt(n){ return Math.round(n).toLocaleString('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}); }
+function ffecha(f){ if(!f) return '—'; const [y,m,d]=f.split('-'); return d+'/'+m+'/'+y; }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function save(){ try{ localStorage.setItem('servel25v2',JSON.stringify(regs)); }catch(e){} }
+function load(){ try{ const r=localStorage.getItem('servel25v2'); return r?JSON.parse(r):[]; }catch(e){ return []; } }
+
+/* ═══════════════════════════════════════════════
+   API KEY (Anthropic) — solo se guarda en este navegador
+═══════════════════════════════════════════════ */
+function loadApikey(){ try{ return localStorage.getItem('servel25v2_apikey') || ''; }catch(e){ return ''; } }
+
+function refreshApikeyUI(){
+  const box   = document.getElementById('apikeyBox');
+  const txt   = document.getElementById('apikeyTxt');
+  const ico   = document.getElementById('apikeyIco');
+  const toggle= document.getElementById('apikeyToggle');
+  if(!box) return;
+  const hasKey = !!apikey;
+  box.classList.toggle('ok', hasKey);
+  ico.className = 'ti ' + (hasKey ? 'ti-shield-check' : 'ti-key') + ' ak-ico';
+  txt.innerHTML = hasKey
+    ? '<strong>API key configurada</strong> · el OCR funcionará en este navegador'
+    : 'Para leer documentos con IA, ingresa tu <strong>API key de Anthropic</strong>';
+  toggle.textContent = hasKey ? 'Cambiar' : 'Configurar';
+}
+
+function toggleApikeyForm(focus){
+  const form = document.getElementById('apikeyForm');
+  const input = document.getElementById('apikeyInput');
+  const willShow = !form.classList.contains('show');
+  form.classList.toggle('show', willShow);
+  if(willShow){
+    input.value = '';
+    form.classList.toggle('pulse', !!focus);
+    setTimeout(()=>input.focus(), 50);
+  } else {
+    form.classList.remove('pulse');
+  }
+}
+
+function saveApikey(){
+  const input = document.getElementById('apikeyInput');
+  const v = input.value.trim();
+  if(!v){ showToast('⚠️ Pega tu API key primero'); return; }
+  apikey = v;
+  try{ localStorage.setItem('servel25v2_apikey', apikey); }catch(e){}
+  document.getElementById('apikeyForm').classList.remove('show','pulse');
+  refreshApikeyUI();
+  showToast('✓ API key guardada en este navegador');
+}
+
+function showToast(msg, dur=2500){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR (marco tipo SERVEL)
+═══════════════════════════════════════════════ */
+let sidebarOpen = window.innerWidth > 880;
+
+function applySidebarState(){
+  const sb = document.getElementById('sidebar');
+  const main = document.getElementById('mainContent');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const lbl = document.getElementById('menuToggleLabel');
+  const isMobile = window.innerWidth <= 880;
+
+  sb.classList.toggle('closed', !sidebarOpen);
+  main.classList.toggle('full', !sidebarOpen || isMobile);
+  backdrop.classList.toggle('show', sidebarOpen && isMobile);
+  lbl.textContent = sidebarOpen ? 'Cerrar Menú' : 'Abrir Menú';
+}
+
+function toggleSidebar(){
+  sidebarOpen = !sidebarOpen;
+  applySidebarState();
+}
+
+window.addEventListener('resize', () => {
+  applySidebarState();
+});
+
+applySidebarState();
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+renderWizard();
+actualizarTotales();
+refreshApikeyUI();
+</script>
+</body>
+</html>
